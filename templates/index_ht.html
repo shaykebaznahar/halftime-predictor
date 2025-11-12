@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚽ Half-Time Football Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #ff6b6b;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.05em;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        select:hover, input:hover {
+            border-color: #667eea;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        select:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .btn-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+        }
+
+        .result.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .matchup {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .team {
+            text-align: center;
+            flex: 1;
+        }
+
+        .team-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .vs {
+            font-size: 2em;
+            color: #667eea;
+            font-weight: bold;
+            padding: 0 20px;
+        }
+
+        .probabilities {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            gap: 10px;
+        }
+
+        .prob-card {
+            flex: 1;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            text-align: center;
+            border-top: 4px solid #667eea;
+        }
+
+        .prob-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .prob-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .prediction {
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-top: 4px solid #ff6b6b;
+        }
+
+        .prediction-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .prediction-result {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stats-box {
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .stats-box h3 {
+            color: #667eea;
+            margin-bottom: 12px;
+            font-size: 1.05em;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.95em;
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #666;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .error {
+            display: none;
+            margin: 20px 0;
+            padding: 15px;
+            background: #ffe0e0;
+            border-left: 4px solid #ff6b6b;
+            border-radius: 4px;
+            color: #d32f2f;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+            color: #1565c0;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .matchup {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .vs {
+                padding: 10px 0;
+            }
+
+            .probabilities {
+                flex-direction: column;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚽ Half-Time Predictor</h1>
+            <p class="subtitle">AI-Powered Football Match Predictions</p>
+            <span class="badge">Half-Time Results (45 mins)</span>
+        </div>
+
+        <div class="info-box">
+            📊 This predictor uses machine learning to forecast half-time results based on team statistics. 
+            Accuracy: ~48-54% depending on league.
+        </div>
+
+        <form id="predictionForm">
+            <!-- League Selection -->
+            <div class="form-group">
+                <label for="league">🏆 Select League:</label>
+                <select id="league" required onchange="loadTeams()">
+                    <option value="">-- Choose a league --</option>
+                    {% for league_code, league_name in leagues %}
+                    <option value="{{ league_code }}">{{ league_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Home Team Selection -->
+            <div class="form-group">
+                <label for="homeTeam">🏠 Home Team:</label>
+                <select id="homeTeam" disabled required onchange="updatePredictionButton()">
+                    <option value="">-- Select after choosing league --</option>
+                </select>
+            </div>
+
+            <!-- Away Team Selection -->
+            <div class="form-group">
+                <label for="awayTeam">✈️ Away Team:</label>
+                <select id="awayTeam" disabled required onchange="updatePredictionButton()">
+                    <option value="">-- Select after choosing league --</option>
+                </select>
+            </div>
+
+            <!-- Predict Button -->
+            <div class="btn-container">
+                <button type="button" id="predictBtn" disabled onclick="predict()">
+                    🎯 Make Prediction
+                </button>
+            </div>
+        </form>
+
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 15px; color: #666;">Analyzing teams...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error" id="errorBox"></div>
+
+        <!-- Results -->
+        <div class="result" id="result">
+            <h2>📊 Prediction Result</h2>
+
+            <div class="matchup">
+                <div class="team">
+                    <div class="team-name" id="resultHomeTeam">-</div>
+                </div>
+                <div class="vs">VS</div>
+                <div class="team">
+                    <div class="team-name" id="resultAwayTeam">-</div>
+                </div>
+            </div>
+
+            <div class="prediction">
+                <div class="prediction-label">🎯 Half-Time Prediction</div>
+                <div class="prediction-result" id="predictionResult">-</div>
+            </div>
+
+            <div class="probabilities">
+                <div class="prob-card">
+                    <div class="prob-label">Home Win</div>
+                    <div class="prob-value" id="probHome">-</div>
+                </div>
+                <div class="prob-card">
+                    <div class="prob-label">Draw</div>
+                    <div class="prob-value" id="probDraw">-</div>
+                </div>
+                <div class="prob-card">
+                    <div class="prob-label">Away Win</div>
+                    <div class="prob-value" id="probAway">-</div>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stats-box">
+                    <h3 id="homeTeamStatsTitle">Home Team Stats</h3>
+                    <div class="stat-row">
+                        <span class="stat-label">Shots (Avg)</span>
+                        <span class="stat-value" id="homeShots">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Shots on Target (Avg)</span>
+                        <span class="stat-value" id="homeOnTarget">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Corners (Avg)</span>
+                        <span class="stat-value" id="homeCorners">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Fouls (Avg)</span>
+                        <span class="stat-value" id="homeFouls">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Yellow Cards (Avg)</span>
+                        <span class="stat-value" id="homeYellow">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Team Strength</span>
+                        <span class="stat-value" id="homePercentile">-</span>
+                    </div>
+                </div>
+
+                <div class="stats-box">
+                    <h3 id="awayTeamStatsTitle">Away Team Stats</h3>
+                    <div class="stat-row">
+                        <span class="stat-label">Shots (Avg)</span>
+                        <span class="stat-value" id="awayShots">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Shots on Target (Avg)</span>
+                        <span class="stat-value" id="awayOnTarget">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Corners (Avg)</span>
+                        <span class="stat-value" id="awayCorners">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Fouls (Avg)</span>
+                        <span class="stat-value" id="awayFouls">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Yellow Cards (Avg)</span>
+                        <span class="stat-value" id="awayYellow">-</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Team Strength</span>
+                        <span class="stat-value" id="awayPercentile">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '';
+
+        function showError(message) {
+            const errorBox = document.getElementById('errorBox');
+            errorBox.textContent = message;
+            errorBox.classList.add('show');
+            setTimeout(() => errorBox.classList.remove('show'), 5000);
+        }
+
+        async function loadTeams() {
+            const league = document.getElementById('league').value;
+            const homeTeamSelect = document.getElementById('homeTeam');
+            const awayTeamSelect = document.getElementById('awayTeam');
+
+            if (!league) {
+                homeTeamSelect.disabled = true;
+                awayTeamSelect.disabled = true;
+                homeTeamSelect.innerHTML = '<option value="">-- Select after choosing league --</option>';
+                awayTeamSelect.innerHTML = '<option value="">-- Select after choosing league --</option>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/teams/${league}`);
+                if (!response.ok) throw new Error('Failed to load teams');
+
+                const data = await response.json();
+                const teams = data.teams;
+
+                homeTeamSelect.innerHTML = '<option value="">-- Choose Home Team --</option>';
+                awayTeamSelect.innerHTML = '<option value="">-- Choose Away Team --</option>';
+
+                teams.forEach(team => {
+                    homeTeamSelect.innerHTML += `<option value="${team}">${team}</option>`;
+                    awayTeamSelect.innerHTML += `<option value="${team}">${team}</option>`;
+                });
+
+                homeTeamSelect.disabled = false;
+                awayTeamSelect.disabled = false;
+                updatePredictionButton();
+            } catch (error) {
+                showError('Error loading teams: ' + error.message);
+            }
+        }
+
+        function updatePredictionButton() {
+            const league = document.getElementById('league').value;
+            const homeTeam = document.getElementById('homeTeam').value;
+            const awayTeam = document.getElementById('awayTeam').value;
+            const predictBtn = document.getElementById('predictBtn');
+
+            predictBtn.disabled = !(league && homeTeam && awayTeam && homeTeam !== awayTeam);
+
+            if (homeTeam && awayTeam && homeTeam === awayTeam) {
+                showError('Home and Away teams cannot be the same!');
+                predictBtn.disabled = true;
+            }
+        }
+
+        async function predict() {
+            const league = document.getElementById('league').value;
+            const homeTeam = document.getElementById('homeTeam').value;
+            const awayTeam = document.getElementById('awayTeam').value;
+
+            if (!league || !homeTeam || !awayTeam) {
+                showError('Please select all fields');
+                return;
+            }
+
+            if (homeTeam === awayTeam) {
+                showError('Teams must be different!');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const resultDiv = document.getElementById('result');
+            loading.style.display = 'block';
+            resultDiv.classList.remove('show');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/predict/${league}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        home_team: homeTeam,
+                        away_team: awayTeam
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Prediction failed');
+                }
+
+                const result = await response.json();
+                displayResult(result);
+            } catch (error) {
+                showError('Error: ' + error.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayResult(data) {
+            // Match info
+            document.getElementById('resultHomeTeam').textContent = data.home_team;
+            document.getElementById('resultAwayTeam').textContent = data.away_team;
+
+            // Prediction
+            let predictionText = '';
+            const pred = data.prediction;
+            if (pred === 'H') {
+                predictionText = `✅ Home Win (${data.home_team})`;
+            } else if (pred === 'D') {
+                predictionText = '🤝 Draw';
+            } else if (pred === 'A') {
+                predictionText = `✅ Away Win (${data.away_team})`;
+            }
+            document.getElementById('predictionResult').textContent = predictionText;
+
+            // Probabilities
+            document.getElementById('probHome').textContent = data.probabilities.H + '%';
+            document.getElementById('probDraw').textContent = data.probabilities.D + '%';
+            document.getElementById('probAway').textContent = data.probabilities.A + '%';
+
+            // Home team stats
+            document.getElementById('homeTeamStatsTitle').textContent = data.home_team + ' Stats';
+            document.getElementById('homeShots').textContent = data.home_stats.HS.toFixed(1);
+            document.getElementById('homeOnTarget').textContent = data.home_stats.HST.toFixed(1);
+            document.getElementById('homeCorners').textContent = data.home_stats.HC.toFixed(1);
+            document.getElementById('homeFouls').textContent = data.home_stats.HF.toFixed(1);
+            document.getElementById('homeYellow').textContent = data.home_stats.HY.toFixed(1);
+            document.getElementById('homePercentile').textContent = (data.home_stats.Home_Percentile * 100).toFixed(0) + '%';
+
+            // Away team stats
+            document.getElementById('awayTeamStatsTitle').textContent = data.away_team + ' Stats';
+            document.getElementById('awayShots').textContent = data.away_stats.AS.toFixed(1);
+            document.getElementById('awayOnTarget').textContent = data.away_stats.AST.toFixed(1);
+            document.getElementById('awayCorners').textContent = data.away_stats.AC.toFixed(1);
+            document.getElementById('awayFouls').textContent = data.away_stats.AF.toFixed(1);
+            document.getElementById('awayYellow').textContent = data.away_stats.AY.toFixed(1);
+            document.getElementById('awayPercentile').textContent = (data.away_stats.Away_Percentile * 100).toFixed(0) + '%';
+
+            // Show result
+            document.getElementById('result').classList.add('show');
+        }
+    </script>
+</body>
+</html>
